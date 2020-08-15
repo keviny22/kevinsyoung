@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: codebuild template for pull requests
+Parameters:
+
+  GithubRepoOwner:
+    Description: Github Owner
+    Type: String
+    Default: "keviny22"
+
+  GithubRepo:
+    Description: Github repository name
+    Type: String
+    Default: "kevinsyoung"
+
+  ECRBuildImage:
+    Description: The ECR image to use in the Codebuild project
+    Type: String
+    Default: "aws/codebuild/standard:2.0"
+
+Resources:
+
+  CodeBuildProject:
+    Type: "AWS::CodeBuild::Project"
+    Properties:
+      Name: !Sub "${GithubRepo}-pr"
+      Description: !Sub "Codebuild project from stack ${AWS::StackName}"
+      Artifacts:
+        Type: NO_ARTIFACTS
+      BadgeEnabled: True
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_LARGE
+        Image: !Ref ECRBuildImage
+        EnvironmentVariables:
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: AWS_REGION
+            Value: !Ref AWS::Region
+      ServiceRole: !Ref CodeBuildServiceRole
+      Source:
+        Type: GITHUB
+        BuildSpec: cicd/buildspecs/test.yml
+        Location: !Sub "https://github.com/${GithubRepoOwner}/${GithubRepo}.git"
+        Auth:
+          Type: OAUTH
+        GitCloneDepth: 1
+      TimeoutInMinutes: 60
+      Triggers:
+        Webhook: True
+        FilterGroups:
+          -
+            - Type: EVENT
+              Pattern: PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED
+
+  CodeBuildServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: !Ref AWS::StackName
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "events:PutEvents"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${GithubRepo}-pr:log-stream:*"
+
+  ### Notifications
+  CodebuildStateFailureEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: "Rule for sending failure notifications to SNS topic"
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          project-name:
+            - !Ref CodeBuildProject
+          build-status:
+            - SUCCEEDED
+            - FAILED
+            - STOPPED
+      State: "ENABLED"
+      Targets:
+        - Arn: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:CodebuildNotifications"
+          Id: "CodeBuildNotifications"
+          InputTransformer:
+            InputTemplate: '"Pull Request has <build-status> for <project-name>. Logs are here: <deep-link>"'
+            InputPathsMap:
+              project-name: "$.detail.project-name"
+              build-status: "$.detail.build-status"
+              deep-link: "$.detail.additional-information.logs.deep-link"
