@@ -21,7 +21,6 @@ artifacts:
   type: zip
   paths:
     - './build/**/*'
-    - './cicd/**/*'
 
 cache:
   paths:
