@@ -39,7 +39,7 @@ Resources:
       ServiceRole: !Ref CodeBuildServiceRole
       Source:
         Type: GITHUB
-        BuildSpec: cicd/buildspecs/test.yml
+        BuildSpec: Buildspec.prod.yml
         Location: !Sub "https://github.com/${GithubRepoOwner}/${GithubRepo}.git"
         Auth:
           Type: OAUTH
