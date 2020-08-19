@@ -1,23 +1,23 @@
 import React from 'react';
-import logo from './logo.svg';
+import headshot from './headshot.jpg';
+import linkedinLogo from './LI-Logo.png';
+
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Kevin S. Young
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
+        <a href="https://www.linkedin.com/in/kevinsyoung/" rel="noopener noreferrer" target="_blank">
+        <img src={headshot} className="headshot" alt="headshot" />
         </a>
+        <p>
+          Kevin S. Young | Software Developer
+        </p>
+        <a href="https://www.linkedin.com/in/kevinsyoung/" rel="noopener noreferrer" target="_blank">
+          <img src={linkedinLogo} className="linkedinLogo" alt="linkedinLogo" />
+        </a>
+
       </header>
     </div>
   );
