@@ -23,13 +23,14 @@ import HomePage from "../pages/home/HomePage";
 import Contact from "../pages/contact/Contact";
 import Resume from "../pages/resume/Resume";
 
+import GitHubLogo from './GitHub-Mark-64px.png';
 
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
-            display: 'flex',
+            flexGrow: 1
         },
         appBar: {
             transition: theme.transitions.create(['margin', 'width'], {
@@ -82,6 +83,9 @@ const useStyles = makeStyles((theme: Theme) =>
             }),
             marginLeft: 0,
         },
+        title: {
+            flexGrow: 1,
+        },
     }),
 );
 
@@ -124,9 +128,14 @@ export default function PersistentDrawerLeft() {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap>
-                        Persistent drawer
+                    <Typography variant="h6" noWrap  className={classes.title}>
+                        Kevin S. Young | Software Developer
                     </Typography>
+                    <IconButton aria-label="github.com">
+                        <a href="https://www.github.com/keviny22" rel="noopener noreferrer" target="_blank">
+                            <img src={GitHubLogo} className="headshot" alt="headshot" />
+                        </a>
+                    </IconButton>
                 </Toolbar>
             </AppBar>
             <Drawer
